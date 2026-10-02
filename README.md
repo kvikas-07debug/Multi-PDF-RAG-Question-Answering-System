@@ -35,3 +35,84 @@ Pandas, Git, Statistics, and NLP. The processed documents produced 122 text chun
 - python-dotenv
 - NumPy
 - Jupyter Notebook
+
+# Project Structure
+```
+RAG/
+│
+├── data/
+│   └── *.pdf
+│
+├── vector_store/
+│   └── ChromaDB persistent vector store
+│
+├── main.ipynb
+├── second.ipynb
+└── requirement.txt
+```
+
+# RAG Pipeline
+# 1. PDF Processing
+PDF files inside the data directory are discovered and loaded page by 
+page using PyPDFLoader.
+```
+loader = PyPDFLoader(str(pdf_file))
+documents = loader.load()
+```
+
+# 2. Text Chunking
+The extracted documents are divided into smaller chunks using:
+- Chunk size: 1500 characters
+- Chunk overlap: 200 characters
+```
+RecursiveCharacterTextSplitter(
+    chunk_size=1500,
+    chunk_overlap=200
+)
+```
+Chunk overlap helps preserve context between neighboring chunks.
+
+# 3. Embedding Generation
+The project uses Sentence Transformers with:
+```
+all-MiniLM-L6-v2
+```
+Each document chunk is converted into a numerical vector representing
+its semantic meaning.
+
+# 4. Vector Storage
+The embeddings are stored persistently in ChromaDB using the
+collection:
+```
+pdf_documents
+```
+Each stored record contains:
+- Unique document ID
+- Document content
+- Embedding
+- Metadata
+- Source information
+
+# 5. Semantic Retrieval
+For a user query, the query is converted into an embedding and searched
+against the ChromaDB collection.
+The retriever supports:
+```
+top_k
+score_threshold
+```
+The notebook demonstrates retrieving the top 4 documents for a
+machine-learning query and later retrieving the top 3 documents for RAG
+generation.
+
+# 6. LLM Response Generation
+The retrieved document content is combined into a context prompt and
+passed to a Groq-hosted LLM.
+The notebook uses:
+```
+openai/gpt-oss-120b
+```
+with a temperature of 0.1 and a maximum output length of 1024
+tokens.
+The model is instructed to answer the question using the retrieved
+context.
